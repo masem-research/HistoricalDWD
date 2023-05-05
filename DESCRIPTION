@@ -1,11 +1,14 @@
 Package: HistoricalDWD
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Gets and aggregates historical weather data from German federal weather service (DWD)
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Guido Moeser
+Maintainer: Guido Moeser <RPackageDevelopment@masem.de>
+Description: Helps to import and aggregate historical weather data from German federal weather service (DWD)
+Depends: 
+    R (>= 4.1),
+    rdwd
+License: MIT
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.2.3
