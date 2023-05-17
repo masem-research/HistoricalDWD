@@ -6,11 +6,10 @@
 #' @param LATITUDE
 #' @param LONGITUDE
 #'
-#' @return
+#' @return list. Returns a list with the different data.frames
 #' @export
 #'
 #' @examples
-#'
 #' PropertyData.1 <- data.frame(Proj_key = c(1021, 1378, 1672),
 #'                              NAME = c("Helogland (Reede)", "Wyk auf Föhr (Alte Mole)", "Konstanz (Hafen)"),
 #'                              LATITUDE = c(54.179837, 54.692713, 47.659868),
@@ -23,7 +22,8 @@
 #'                                       LONGITUDE = LONGITUDE,
 #'                                       ExtractedRunningNo = 2,
 #'                                       StartYear = 2018,
-#'                                       EndYear = 2022)
+#'                                       EndYear = 2022,
+#'                                       PrintMessages = TRUE)
 HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                      Proj_key = Proj_key,
                                      NAME = NAME,
@@ -31,7 +31,8 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                      LONGITUDE = LONGITUDE,
                                      ExtractedRunningNo = 2,
                                      StartYear = 2018,
-                                     EndYear = 2022) {
+                                     EndYear = 2022,
+                                     PrintMessages = TRUE) {
 
   # Empty list for results
   ListWithResults <- list()
@@ -67,19 +68,44 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   ListWithResults[["HistoricalWeatherDataDF"]] <- HistoricalWeatherDataDF
 
 
-  ## First and latest entries
-  print(aggregate(x = ListWithResults$HistoricalWeatherDataDF[,"MESS_DATUM", drop = F],
-                  by =  list(ListWithResults$HistoricalWeatherDataDF$STATIONS_ID), max))
+  ## Reduced historical data from identified weather stations - between start and end date
+  #   and the core variables
+  ListWithResults[["HistoricalWeatherDataDFReduced"]] <-
+    HistoricalWeatherDataDF[as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) >= StartYear &
+                              as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) <= EndYear ,
+                            c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")]
 
-  # Check the oldest entry
-  print(aggregate(x = ListWithResults$HistoricalWeatherDataDF[,"MESS_DATUM", drop = F],
-                  by =  list(ListWithResults$HistoricalWeatherDataDF$STATIONS_ID), min))
+  #write.csv2(x = ListWithResults[["HistoricalWeatherDataDFReduced"]], file = "X:/HistoricalWeatherDataDFReduced.csv")
+
+  ## WX data complete or select another weather station?
+  #   Reduced data.frame
+  WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
+                                                 ListWithResults$HistoricalWeatherDataDFReduced,
+                                                 StartYear = StartYear,
+                                                 EndYear = EndYear,
+                                                 silent = !PrintMessages)
+
+  # Write list into list
+  ListWithResults[["WXValidationDF"]] <- WXValidationDF
+
+
+  browser()
 
   ## Check if the weather data is complete over the given timeframe
   #   The data.frames should have an entry for every day
 
+  # Threshold: 3% of missing values are okay and will be imputed using imputeTS
+  # Calculate Threshold
+  # Theoretical number of entires per station
+  ListWithResults$WXValidationDF$TheoreticalNumberOfValidEntries
 
-  ## Return
+
+  ## Argument (TRUE/FALSE): Replace incomplete data.frame by next ID in list?
+
+  ## Generate map with all stations using tmap
+
+
+  ## return
   return(ListWithResults)
 
 
