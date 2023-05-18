@@ -45,29 +45,67 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
   # print
   if (!silent) print(CombinedDF)
 
-  ## Validate: the time.series should be complete for two parameters TMK and RSK between start and end date
 
-  # Build start and end date
+  ## Validate and Generate:
+  #   Validate: the time.series should be complete for two parameters TMK and RSK between start and end date
+  #   Generate: generate a combined data.frame which is basis for validation
+
+  # Step: Build start and end date
   StartDate <- paste0(StartYear, "-01-01")
   EndDate <- paste0(EndYear, "-12-31")
 
-  # Generate a complete data.frame with all days between start and end year
+  # Step: Generate a complete data.frame with all days between start and end year
   SeriesOfDays <- seq(from = as.Date(StartDate), to = as.Date(EndDate), by = 1)
-  # Convert into data.frame
-  SeriesOfDays <- data.frame(SeriesOfDays)
-  colnames(SeriesOfDays) <- "Day"
+  print(paste("[Message] Number of days in timeframe:", length(SeriesOfDays)))
+  # Step: Add all Study IDs to prevent missing dates
+  StationIDs <- unique(HistoricalWeatherDataFrameToTest$STATIONS_ID)
+  print(paste("[Message] Number of Days x Stations:", length(SeriesOfDays) * length(StationIDs)))
+  # Step: Convert into data.frame
+  SeriesOfDaysWithStationIDs <- merge(SeriesOfDays, StationIDs)
+  colnames(SeriesOfDaysWithStationIDs) <- c("Day", "STATIONS_ID")
+  print(paste("[Message] The final data.frame should have", nrow(SeriesOfDaysWithStationIDs), "rows"))
+  # Write into list
+  ListValidateData[["TheoreticalNumberOfValidEntries"]] <- nrow(SeriesOfDaysWithStationIDs)
 
-  # Validate against HistoricalWeatherDataFrameToTest
+
+  ## Generate data.frame to validate
+  #  Note: Sometime there is more than one entry for a day --> will aggregate the data first
+  # Step: Reduce: only TMK and RSK
   HistWXData <- HistoricalWeatherDataFrameToTest[,c("STATIONS_ID", "MESS_DATUM", "TMK", "RSK")]
+  print(paste("[Message] The data.frame with historical DWD weather has", nrow(HistWXData), "entries."))
+  nrow(HistWXData)
+  # Step: Convert MESS_DATUM into data format
   HistWXData$MESS_DATUM <- as.Date(HistWXData$MESS_DATUM)
+  # Step: Aggregate by MESS_DATUM and STATIONS_ID using the arithmetic mean
+  HistWXDataAggr <- aggregate.data.frame(x = HistWXData,
+                                         by = list(HistWXData$MESS_DATUM, HistWXData$STATIONS_ID),
+                                         mean,
+                                         na.rm = TRUE)
+  # Clean-up
+  HistWXDataAggr$Group.1 <- NULL
+  HistWXDataAggr$Group.2 <- NULL
+  # Replace NaN through NA
+  HistWXDataAggr$TMK[is.nan(HistWXDataAggr$TMK)] <- NA
+  HistWXDataAggr$RSK[is.nan(HistWXDataAggr$RSK)] <- NA
+  # Message
+  print(paste("[Message] The aggregated DWD historical weather data.frame has", nrow(HistWXDataAggr), "entries"))
+  # Step: Merge against data.frame SeriesOfDaysWithStationIDs: LEFT JOIN
+  ValidationDF <- merge.data.frame(x = SeriesOfDaysWithStationIDs,
+                                   y = HistWXDataAggr,
+                                   by.x = c("Day", "STATIONS_ID"),
+                                   by.y = c("MESS_DATUM", "STATIONS_ID"),
+                                   all.x = TRUE)
+  print(paste("The merged data.frame has", nrow(ValidationDF),"entries"))
+  # Step: sort by STATIONS_ID und Day
+  ValidationDF <- ValidationDF[order(ValidationDF$STATIONS_ID, ValidationDF$Day),]
+  # print
+  if (!silent) print(head(ValidationDF))
 
-  # Mergen gegen Referenzdaten: LEFT JOIN
-  ValidationDF <- merge.data.frame(x = SeriesOfDays, y = HistWXData, by.x = "Day", by.y = "MESS_DATUM")
-  # Return this data.frame as a corrected data.frame
-  # write into list
-  ListValidateData[["HistoricalWXDataValidated"]] <- ValidationAggrDF
+  # Write into list
+  ListValidateData[["HistoricalWXDataValidated"]] <- ValidationDF
 
-  # Aggregate to validate:
+  ## Number of missing values in time.series
+  # Step: Aggregate to get the number of missing values:
   ValidationAggrDF <- aggregate.data.frame(ValidationDF, by = list(ValidationDF$STATIONS_ID),
                                            FUN = function(x) sum(is.na(x)))
   ValidationAggrDF$Day <- NULL # Variable Day not needed any more
@@ -78,13 +116,6 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
   ListValidateData[["ValidationAggrDF"]] <- ValidationAggrDF
   # print
   if (!silent) print(ValidationAggrDF)
-
-  #browser()
-
-  # check theoretical number of valid entries: SeriesOfDays * TMK and RSK (multiply by 2)
-  TheoreticalNumberOfValidEntries <- nrow(SeriesOfDays) * 2
-  # Write into list
-  ListValidateData[["TheoreticalNumberOfValidEntries"]] <- TheoreticalNumberOfValidEntries
 
   ## return: list
   return(ListValidateData)

@@ -75,24 +75,20 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                               as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) <= EndYear ,
                             c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")]
 
-  #write.csv2(x = ListWithResults[["HistoricalWeatherDataDFReduced"]], file = "X:/HistoricalWeatherDataDFReduced.csv")
-
-  ## WX data complete or select another weather station?
-  #   Reduced data.frame
+  ## DWD historical data.frame complete or not?
+  ## Generate a complete time.series between start- and end-year
+  #   Missing Entries will be replaced by NA
   WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
                                                  ListWithResults$HistoricalWeatherDataDFReduced,
                                                  StartYear = StartYear,
                                                  EndYear = EndYear,
                                                  silent = !PrintMessages)
-
   # Write list into list
   ListWithResults[["WXValidationDF"]] <- WXValidationDF
 
-
+  # Get the data.frame with missing values
   browser()
 
-  ## Check if the weather data is complete over the given timeframe
-  #   The data.frames should have an entry for every day
 
   # Threshold: 3% of missing values are okay and will be imputed using imputeTS
   # Calculate Threshold
