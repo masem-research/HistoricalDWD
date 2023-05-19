@@ -57,6 +57,8 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
   # Step: Generate a complete data.frame with all days between start and end year
   SeriesOfDays <- seq(from = as.Date(StartDate), to = as.Date(EndDate), by = 1)
   print(paste("[Message] Number of days in timeframe:", length(SeriesOfDays)))
+  # Write into list
+  ListValidateData[["TheoreticalNumberOfEachWeatherStation"]] <- length(SeriesOfDays)
   # Step: Add all Study IDs to prevent missing dates
   StationIDs <- unique(HistoricalWeatherDataFrameToTest$STATIONS_ID)
   print(paste("[Message] Number of Days x Stations:", length(SeriesOfDays) * length(StationIDs)))
@@ -116,6 +118,19 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
   ListValidateData[["ValidationAggrDF"]] <- ValidationAggrDF
   # print
   if (!silent) print(ValidationAggrDF)
+
+  # table with relative values
+  DFWithNAsOfEachWXStation <- data.frame(STATION_ID = ValidationAggrDF$STATIONS_ID,
+                                         P.na.RSK = round(ValidationAggrDF$na.TMK /
+                                                            length(SeriesOfDays) * 100, 1),
+                                         P.na.TMK = round(ValidationAggrDF$na.RSK /
+                                                            length(SeriesOfDays) * 100, 1))
+  # print
+  if (!silent) print(DFWithNAsOfEachWXStation)
+
+  # write into list
+  ListValidateData[["ValidationAggrDFPercentageValues"]] <- DFWithNAsOfEachWXStation
+
 
   ## return: list
   return(ListValidateData)

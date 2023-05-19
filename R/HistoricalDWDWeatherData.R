@@ -86,14 +86,21 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   # Write list into list
   ListWithResults[["WXValidationDF"]] <- WXValidationDF
 
-  # Get the data.frame with missing values
   browser()
 
-
-  # Threshold: 3% of missing values are okay and will be imputed using imputeTS
+  # TODO: Diesen Teil mit Threshold Argument auch in die Funktion CheckIfWeather...()
+  # Threshold: < 5% of missing values are okay and will be imputed using imputeTS
   # Calculate Threshold
   # Theoretical number of entires per station
-  ListWithResults$WXValidationDF$TheoreticalNumberOfValidEntries
+  ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues
+
+  # Check if a STATION_ID has more then 5% missing values
+  # No problems
+  ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.RSK == 0 &
+    ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.TMK == 0
+  # Between 0 and < 5 percent of missing values
+  ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.RSK == 0 &
+    ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.TMK == 0
 
 
   ## Argument (TRUE/FALSE): Replace incomplete data.frame by next ID in list?
