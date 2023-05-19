@@ -24,7 +24,8 @@
 CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
                                          StartYear = 2022,
                                          EndYear = 2022,
-                                         silent = TRUE) {
+                                         silent = TRUE,
+                                         thresholdNAs = 0.05) {
 
   ## Empty list for results
   ListValidateData <- list()
@@ -125,11 +126,32 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
                                                             length(SeriesOfDays) * 100, 1),
                                          P.na.TMK = round(ValidationAggrDF$na.RSK /
                                                             length(SeriesOfDays) * 100, 1))
-  # print
-  if (!silent) print(DFWithNAsOfEachWXStation)
+
+  # table with evaluation (okay / NAs below threshold / NAs above threshold)
+  DFWithNAsOfEachWXStation$Eval.na.RSK[DFWithNAsOfEachWXStation$P.na.RSK == 0] <- "okay"
+  DFWithNAsOfEachWXStation$Eval.na.RSK[DFWithNAsOfEachWXStation$P.na.RSK > 0.0 &
+                                         DFWithNAsOfEachWXStation$P.na.RSK <= 5.0 ] <- "NAs below threshold"
+  DFWithNAsOfEachWXStation$Eval.na.RSK[DFWithNAsOfEachWXStation$P.na.RSK > 5.0] <- "NAs above threshold"
+
+  DFWithNAsOfEachWXStation$Eval.na.TMK[DFWithNAsOfEachWXStation$P.na.TMK == 0] <- "okay"
+  DFWithNAsOfEachWXStation$Eval.na.TMK[DFWithNAsOfEachWXStation$P.na.TMK > 0.0 &
+                                         DFWithNAsOfEachWXStation$P.na.TMK <= 5.0 ] <- "NAs below threshold"
+  DFWithNAsOfEachWXStation$Eval.na.TMK[DFWithNAsOfEachWXStation$P.na.TMK > 5.0] <- "NAs above threshold"
+
+  ## Evaluation: If one entry is NAs above threshold --> get entry number 3 and so forth, until the data.frame is
+  #   complete
+  #  Extract IDs of the closest identified DWD wweather stations
+  DFWithNAsOfEachWXStation$GetNewWeatherStation <-
+    DFWithNAsOfEachWXStation$Eval.na.RSK %in% "NAs above threshold" |
+    DFWithNAsOfEachWXStation$Eval.na.TMK %in% "NAs above threshold"
+
+  DFWithNAsOfEachWXStation$ImputationRSK <- DFWithNAsOfEachWXStation$Eval.na.RSK %in% "NAs below threshold"
+  DFWithNAsOfEachWXStation$ImputationTMK <- DFWithNAsOfEachWXStation$Eval.na.TMK %in% "NAs below threshold"
 
   # write into list
   ListValidateData[["ValidationAggrDFPercentageValues"]] <- DFWithNAsOfEachWXStation
+  # print
+  if (!silent) print(DFWithNAsOfEachWXStation)
 
 
   ## return: list

@@ -13,11 +13,21 @@ HistoricalDWDWeatherData(
   ExtractedRunningNo = 2,
   StartYear = 2018,
   EndYear = 2022,
-  PrintMessages = TRUE
+  PrintMessages = TRUE,
+  ThresholdNAs = 0.05
 )
 }
 \arguments{
-\item{LONGITUDE}{}
+\item{ExtractedRunningNo}{integer. Extracted DWD weather station in downloaded list. It is the list with smallest
+path to object coordinates. default: `2`}
+
+\item{StartYear.}{integer. default: `2018`}
+
+\item{EndYear.}{integer. default: `2022`}
+
+\item{PrintMessages.}{boolean. default: `TRUE`}
+
+\item{ThresholdNAs.}{double. default: `0.05`}
 }
 \value{
 list. Returns a list with the different data.frames
@@ -39,5 +49,6 @@ HistDWDDF <- HistoricalDWDWeatherData(DataFrame = PropertyData.1,
                                       ExtractedRunningNo = 2,
                                       StartYear = 2018,
                                       EndYear = 2022,
-                                      PrintMessages = TRUE)
+                                      PrintMessages = TRUE,
+                                      ThresholdNAs = 0.05)
 }

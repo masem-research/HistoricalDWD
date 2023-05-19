@@ -5,6 +5,12 @@
 #' @param NAME
 #' @param LATITUDE
 #' @param LONGITUDE
+#' @param ExtractedRunningNo integer. Extracted DWD weather station in downloaded list. It is the list with smallest
+#' path to object coordinates. default: `2`
+#' @param StartYear. integer. default: `2018`
+#' @param EndYear. integer. default: `2022`
+#' @param PrintMessages. boolean. default: `TRUE`
+#' @param ThresholdNAs. double. default: `0.05`
 #'
 #' @return list. Returns a list with the different data.frames
 #' @export
@@ -23,7 +29,8 @@
 #'                                       ExtractedRunningNo = 2,
 #'                                       StartYear = 2018,
 #'                                       EndYear = 2022,
-#'                                       PrintMessages = TRUE)
+#'                                       PrintMessages = TRUE,
+#'                                       ThresholdNAs = 0.05)
 HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                      Proj_key = Proj_key,
                                      NAME = NAME,
@@ -32,7 +39,8 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                      ExtractedRunningNo = 2,
                                      StartYear = 2018,
                                      EndYear = 2022,
-                                     PrintMessages = TRUE) {
+                                     PrintMessages = TRUE,
+                                     ThresholdNAs = 0.05) {
 
   # Empty list for results
   ListWithResults <- list()
@@ -86,26 +94,32 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   # Write list into list
   ListWithResults[["WXValidationDF"]] <- WXValidationDF
 
+
+  ## Update the vector with station IDs if NA threshold is hit
+  UpdatedDFWithStationIDToExtract <-
+    RefreshStationIDs(ValidationResultsDF = ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues,
+                      NearbyDWDStationsDataFrame = ListWithResults$NearbyDWDStationsDataFrame,
+                      ExtractedRunningNo = ExtractedRunningNo,
+                      IDExtractedWeatherStations = IDExtractedWeatherStations)
+
+  # Updated data.frame
+  print("[Message: Update data.frame: NewVectorToExtract contains the new vector with weather stations")
+  print(UpdatedDFWithStationIDToExtract)
+
   browser()
 
-  # TODO: Diesen Teil mit Threshold Argument auch in die Funktion CheckIfWeather...()
-  # Threshold: < 5% of missing values are okay and will be imputed using imputeTS
-  # Calculate Threshold
-  # Theoretical number of entires per station
-  ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues
+  # Get a new set of time.series
+  ## Get the historical data from the identified weather stations
+  HistoricalWeatherDataDF <- GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
+                                                           UpdatedDFWithStationIDToExtract$NewVectorToExtract)
 
-  # Check if a STATION_ID has more then 5% missing values
-  # No problems
-  ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.RSK == 0 &
-    ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.TMK == 0
-  # Between 0 and < 5 percent of missing values
-  ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.RSK == 0 &
-    ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$P.na.TMK == 0
+  # Wieder validieren ...
+  # TODO: den Prozess nun solange wiederholen, bis alle Werte unter Threshold sind
 
 
-  ## Argument (TRUE/FALSE): Replace incomplete data.frame by next ID in list?
+  ## TODO: Impute NAs values
 
-  ## Generate map with all stations using tmap
+  ## TODO: Generate map with all stations using tmap
 
 
   ## return

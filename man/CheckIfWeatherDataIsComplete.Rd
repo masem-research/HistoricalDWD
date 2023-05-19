@@ -8,7 +8,8 @@ CheckIfWeatherDataIsComplete(
   HistoricalWeatherDataFrameToTest,
   StartYear = 2022,
   EndYear = 2022,
-  silent = TRUE
+  silent = TRUE,
+  thresholdNAs = 0.05
 )
 }
 \arguments{
