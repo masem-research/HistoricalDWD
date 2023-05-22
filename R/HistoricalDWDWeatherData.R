@@ -87,35 +87,80 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   ## Generate a complete time.series between start- and end-year
   #   Missing Entries will be replaced by NA
   WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
-                                                 ListWithResults$HistoricalWeatherDataDFReduced,
+                                                   ListWithResults$HistoricalWeatherDataDFReduced,
                                                  StartYear = StartYear,
                                                  EndYear = EndYear,
+                                                 IDExtractedWeatherStations = ExtractedRunningNo,
                                                  silent = !PrintMessages)
   # Write list into list
   ListWithResults[["WXValidationDF"]] <- WXValidationDF
 
+  # print current state: time series okay?
+  print("\n")
+  print(ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues)
 
-  ## Update the vector with station IDs if NA threshold is hit
-  UpdatedDFWithStationIDToExtract <-
-    RefreshStationIDs(ValidationResultsDF = ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues,
-                      NearbyDWDStationsDataFrame = ListWithResults$NearbyDWDStationsDataFrame,
-                      ExtractedRunningNo = ExtractedRunningNo,
-                      IDExtractedWeatherStations = IDExtractedWeatherStations)
+  #browser()
 
-  # Updated data.frame
-  print("[Message: Update data.frame: NewVectorToExtract contains the new vector with weather stations")
-  print(UpdatedDFWithStationIDToExtract)
+  # Init
+  ExtractedRunningNo <- ExtractedRunningNo
 
-  browser()
+  # Wiederholtes Validieren: den Prozess solange wiederholen, bis alle Werte unter Threshold sind
+  while (any(ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$GetNewWeatherStation)) {
 
-  # Get a new set of time.series
-  ## Get the historical data from the identified weather stations
-  HistoricalWeatherDataDF <- GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
-                                                           UpdatedDFWithStationIDToExtract$NewVectorToExtract)
+    browser()
 
-  # Wieder validieren ...
-  # TODO: den Prozess nun solange wiederholen, bis alle Werte unter Threshold sind
+    ## Update the vector with station IDs if NA threshold is hit
+    UpdatedDFWithStationIDToExtract <-
+      RefreshStationIDs(ValidationResultsDF = ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues,
+                        NearbyDWDStationsDataFrame = ListWithResults$NearbyDWDStationsDataFrame,
+                        ExtractedRunningNo = ExtractedRunningNo,
+                        IDExtractedWeatherStations = IDExtractedWeatherStations)
 
+    # Updated data.frame
+    print("[Message: Update data.frame: NewVectorToExtract contains the new vector with weather stations")
+    print(UpdatedDFWithStationIDToExtract)
+
+    # Get a new set of time.series
+    ## Get the historical data from the identified weather stations
+    HistoricalWeatherDataDF <- GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
+                                                             UpdatedDFWithStationIDToExtract$NewVectorToExtract)
+
+    # Write into list: Update
+    ListWithResults[["HistoricalWeatherDataDF"]] <- HistoricalWeatherDataDF
+
+
+    ## Reduced historical data from identified weather stations - between start and end date
+    #   and the core variables
+    ListWithResults[["HistoricalWeatherDataDFReduced"]] <-
+      HistoricalWeatherDataDF[as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) >= StartYear &
+                                as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) <= EndYear ,
+                              c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")]
+
+    #browser()
+    # Validation and Update of evaluation criteria for while-loop
+    WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
+                                                     ListWithResults$HistoricalWeatherDataDFReduced,
+                                                   StartYear = StartYear,
+                                                   EndYear = EndYear,
+                                                   silent = !PrintMessages,
+                                                   IDExtractedWeatherStations = UpdatedDFWithStationIDToExtract$ExtractedRunningNo
+                                                   )
+
+    # Inform
+    print("[Message] time.series after updating the Station-ID vector:")
+    print(WXValidationDF$ValidationAggrDFPercentageValues)
+
+    # Write list into list
+    ListWithResults[["WXValidationDF"]] <- WXValidationDF
+
+
+
+    # Update: Extracted Running Number
+    ExtractedRunningNo <- UpdatedDFWithStationIDToExtract$ExtractedRunningNo
+
+    #browser()
+
+  }
 
   ## TODO: Impute NAs values
 

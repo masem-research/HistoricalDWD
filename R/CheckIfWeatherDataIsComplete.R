@@ -8,6 +8,9 @@
 #' @param StartYear integer. default: `2022`
 #' @param EndYear integer. default: `2022`
 #' @param silent boolean. Should messages be print? default: `TRUE`
+#' @param thresholdNAs double. Above which relative amount of NAs (in points) should a time.series get rejected?
+#' default: `0.05`
+#' @param IDExtractedWeatherStations interger. default value is 2 (corresponds to first entry in list with weather stations)
 #'
 #' @return list.
 #' @export
@@ -25,7 +28,10 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
                                          StartYear = 2022,
                                          EndYear = 2022,
                                          silent = TRUE,
-                                         thresholdNAs = 0.05) {
+                                         thresholdNAs = 0.05,
+                                         IDExtractedWeatherStations = 2) {
+
+  browser()
 
   ## Empty list for results
   ListValidateData <- list()
@@ -122,6 +128,7 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
 
   # table with relative values
   DFWithNAsOfEachWXStation <- data.frame(STATION_ID = ValidationAggrDF$STATIONS_ID,
+                                         STATION_ID_POSITION = IDExtractedWeatherStations,
                                          P.na.RSK = round(ValidationAggrDF$na.TMK /
                                                             length(SeriesOfDays) * 100, 1),
                                          P.na.TMK = round(ValidationAggrDF$na.RSK /

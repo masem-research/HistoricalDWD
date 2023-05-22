@@ -9,7 +9,8 @@ CheckIfWeatherDataIsComplete(
   StartYear = 2022,
   EndYear = 2022,
   silent = TRUE,
-  thresholdNAs = 0.05
+  thresholdNAs = 0.05,
+  IDExtractedWeatherStations = 2
 )
 }
 \arguments{
@@ -20,6 +21,11 @@ CheckIfWeatherDataIsComplete(
 \item{EndYear}{integer. default: `2022`}
 
 \item{silent}{boolean. Should messages be print? default: `TRUE`}
+
+\item{thresholdNAs}{double. Above which relative amount of NAs (in points) should a time.series get rejected?
+default: `0.05`}
+
+\item{IDExtractedWeatherStations}{interger. default value is 2 (corresponds to first entry in list with weather stations)}
 }
 \value{
 list.
