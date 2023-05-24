@@ -10,7 +10,8 @@
 #' @param silent boolean. Should messages be print? default: `TRUE`
 #' @param thresholdNAs double. Above which relative amount of NAs (in points) should a time.series get rejected?
 #' default: `0.05`
-#' @param IDExtractedWeatherStations interger. default value is 2 (corresponds to first entry in list with weather stations)
+#' @param IDExtractedWeatherStations interger. default value is `2` (corresponds to first entry in list with weather stations)
+#' @param OrderIDsWXStations character vector. Vector with weather-station IDs in original order.
 #'
 #' @return list.
 #' @export
@@ -29,9 +30,10 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
                                          EndYear = 2022,
                                          silent = TRUE,
                                          thresholdNAs = 0.05,
-                                         IDExtractedWeatherStations = 2) {
+                                         IDExtractedWeatherStations = 2,
+                                         OrderIDsWXStations) {
 
-  browser()
+  #browser()
 
   ## Empty list for results
   ListValidateData <- list()
@@ -86,13 +88,13 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
   # Step: Convert MESS_DATUM into data format
   HistWXData$MESS_DATUM <- as.Date(HistWXData$MESS_DATUM)
   # Step: Aggregate by MESS_DATUM and STATIONS_ID using the arithmetic mean
-  HistWXDataAggr <- aggregate.data.frame(x = HistWXData,
+  HistWXDataAggr <- aggregate.data.frame(x = HistWXData[,c("TMK", "RSK")],
                                          by = list(HistWXData$MESS_DATUM, HistWXData$STATIONS_ID),
                                          mean,
                                          na.rm = TRUE)
-  # Clean-up
-  HistWXDataAggr$Group.1 <- NULL
-  HistWXDataAggr$Group.2 <- NULL
+  # Rename
+  colnames(HistWXDataAggr)[1] <- "MESS_DATUM"
+  colnames(HistWXDataAggr)[2] <- "STATIONS_ID"
   # Replace NaN through NA
   HistWXDataAggr$TMK[is.nan(HistWXDataAggr$TMK)] <- NA
   HistWXDataAggr$RSK[is.nan(HistWXDataAggr$RSK)] <- NA
@@ -121,6 +123,8 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
   ValidationAggrDF$STATIONS_ID <- NULL # Variable STATIONS_ID not needed any more
   # Change colnames
   colnames(ValidationAggrDF) <- c("STATIONS_ID", "na.TMK", "na.RSK")
+  # Change back to original order
+  ValidationAggrDF <- ValidationAggrDF[order(match(ValidationAggrDF[[1]], OrderIDsWXStations)), ]
   # write into list
   ListValidateData[["ValidationAggrDF"]] <- ValidationAggrDF
   # print
@@ -160,7 +164,8 @@ CheckIfWeatherDataIsComplete <- function(HistoricalWeatherDataFrameToTest,
   # print
   if (!silent) print(DFWithNAsOfEachWXStation)
 
-
+  # Change back to original order
+  DFWithNAsOfEachWXStation <- DFWithNAsOfEachWXStation[order(match(DFWithNAsOfEachWXStation[[1]], OrderIDsWXStations)), ]
   ## return: list
   return(ListValidateData)
 

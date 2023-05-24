@@ -35,7 +35,7 @@ GetHistoricalDWDWeatherData <- function(VectorWithIDsDWDWeatherStations) {
     rdwd::dataDWD(VectorWithURLs[x], dir = tempdir(), progbar = TRUE)
   })
 
-  ## Set name sin list
+  ## Set names in list
   #   Since a name should not start with a number, the prefix ID_ is prepended
   VectorWithNames <- paste0("ID_", VectorWithIDsDWDWeatherStations)
   names(DWDWeatherData) <- VectorWithNames

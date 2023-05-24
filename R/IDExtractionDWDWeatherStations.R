@@ -20,8 +20,10 @@
 #'
 #' # Extract IDs of the closest identified DWD wweather stations
 #' IDExtractionDWDWeatherStations(NearbyDWDStationsDataFrame = NearbyDWDStationsDataFrame, ExtractedRunningNo = 2)
-IDExtractionDWDWeatherStations <- function(NearbyDWDStationsDataFrame, DWDIDColumn = "Stations_id",
-                                           RunningNoColumn = "LfdNr", ExtractedRunningNo = 2) {
+IDExtractionDWDWeatherStations <- function(NearbyDWDStationsDataFrame,
+                                           DWDIDColumn = "Stations_id",
+                                           RunningNoColumn = "LfdNr",
+                                           ExtractedRunningNo = 2) {
   # The IDs of the identified DWD weather stations are extracted a
   IDsAllStations <- NearbyDWDStationsDataFrame[NearbyDWDStationsDataFrame[RunningNoColumn] == ExtractedRunningNo, DWDIDColumn]
   # Add leading zeros and convert to character with formatC() function

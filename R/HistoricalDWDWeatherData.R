@@ -42,6 +42,7 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                      PrintMessages = TRUE,
                                      ThresholdNAs = 0.05) {
 
+
   # Empty list for results
   ListWithResults <- list()
 
@@ -54,6 +55,7 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
 
   ## Get DWD Metadata
   DWDHistoricalMetaDataAllStations <- GetDWDMetaData(OnlyCurrentDate = FALSE)
+  # Please note: Stations_id is a 5-digit-character with leading zeros
 
   # Write into list
   ListWithResults[["DWDHistoricalMetaDataAllStations"]] <- DWDHistoricalMetaDataAllStations
@@ -64,13 +66,20 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
     IDExtractionDWDWeatherStations(NearbyDWDStationsDataFrame = ListWithResults$NearbyDWDStationsDataFrame,
                                    ExtractedRunningNo = ExtractedRunningNo)
 
+
+
   # Write into list
   ListWithResults[["IDExtractedWeatherStations"]] <- IDExtractedWeatherStations
 
-
+  # TODO: Ggf so ändern, dass die Wetterstationen einzeln abgefragt werden
+  #  Dann können die Stationen besser ausgetauscht werden
   ## Get the historical data from the identified weather stations
   HistoricalWeatherDataDF <- GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
                                                            ListWithResults$IDExtractedWeatherStations)
+
+  # Correct Station-IDs: rdwd package function returns station id as integer without leading nulls!
+  HistoricalWeatherDataDF$STATIONS_ID <-
+    base::formatC(HistoricalWeatherDataDF$STATIONS_ID, width = 5, format = "d", flag = "0")
 
   # Write into list
   ListWithResults[["HistoricalWeatherDataDF"]] <- HistoricalWeatherDataDF
@@ -91,15 +100,14 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                                  StartYear = StartYear,
                                                  EndYear = EndYear,
                                                  IDExtractedWeatherStations = ExtractedRunningNo,
-                                                 silent = !PrintMessages)
+                                                 silent = !PrintMessages,
+                                                 OrderIDsWXStations = ListWithResults$IDExtractedWeatherStations)
   # Write list into list
   ListWithResults[["WXValidationDF"]] <- WXValidationDF
 
   # print current state: time series okay?
   print("\n")
   print(ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues)
-
-  #browser()
 
   # Init
   ExtractedRunningNo <- ExtractedRunningNo
@@ -125,6 +133,10 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
     HistoricalWeatherDataDF <- GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
                                                              UpdatedDFWithStationIDToExtract$NewVectorToExtract)
 
+    # Correct Station-IDs: rdwd package function returns station id as integer without leading nulls!
+    HistoricalWeatherDataDF$STATIONS_ID <-
+      base::formatC(HistoricalWeatherDataDF$STATIONS_ID, width = 5, format = "d", flag = "0")
+
     # Write into list: Update
     ListWithResults[["HistoricalWeatherDataDF"]] <- HistoricalWeatherDataDF
 
@@ -136,15 +148,16 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                 as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) <= EndYear ,
                               c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")]
 
-    #browser()
     # Validation and Update of evaluation criteria for while-loop
+    # TODO: Fehler --> hier wird die laufende Nummer an der falschen Stelle angepasst,  obwohl
+    #  zuerst die richtige Zeile identifiziert wird!
     WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
                                                      ListWithResults$HistoricalWeatherDataDFReduced,
                                                    StartYear = StartYear,
                                                    EndYear = EndYear,
                                                    silent = !PrintMessages,
-                                                   IDExtractedWeatherStations = UpdatedDFWithStationIDToExtract$ExtractedRunningNo
-                                                   )
+                                                   IDExtractedWeatherStations = UpdatedDFWithStationIDToExtract$ExtractedRunningNo,
+                                                   OrderIDsWXStations = ListWithResults$IDExtractedWeatherStations)
 
     # Inform
     print("[Message] time.series after updating the Station-ID vector:")
@@ -163,6 +176,8 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   }
 
   ## TODO: Impute NAs values
+
+
 
   ## TODO: Generate map with all stations using tmap
 

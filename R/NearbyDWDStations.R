@@ -38,6 +38,11 @@ NearbyDWDStations <- function(propertyData,
   ## Name elements in the list
   names(NearbyStationsList) <- propertyData$NAME
 
+  ## Delete all recent entries in lists
+  for (i in 1:length(NearbyStationsList)) {
+    NearbyStationsList[[i]] <- NearbyStationsList[[i]][NearbyStationsList[[i]]$per == "historical",]
+  }
+
   ## Append the sequence number and the Proj_key to each data.frame
   for (i in 1:length(NearbyStationsList)) {
     NearbyStationsList[[i]]$LfdNr <- 1:nrow(NearbyStationsList[[i]])
@@ -47,6 +52,12 @@ NearbyDWDStations <- function(propertyData,
 
   ## Generate data.frame
   NearbyStationsDataFrame <- do.call(rbind, NearbyStationsList)
+
+  # Clean Stations_id --> GetDWDNetaData() functions returns a list with 5-digits-character values with leading zeros
+  NearbyStationsDataFrame$Stations_id <- base::formatC(NearbyStationsDataFrame$Stations_id,
+                                                       width = 5,
+                                                       format = "d",
+                                                       flag = "0")
 
   # return
   return(NearbyStationsDataFrame)

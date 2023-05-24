@@ -21,8 +21,8 @@ RefreshStationIDs <- function(ValidationResultsDF,
   DFStationID <- data.frame(STATION_ID = ValidationResultsDF$STATION_ID,
                             ExtractedRunningNo = ExtractedRunningNo)
   # Correct STATION_ID
-  DFStationID$STATION_ID <-
-    base::formatC(DFStationID$STATION_ID, width = 5, format = "d", flag = "0")
+  #DFStationID$STATION_ID <-
+  #  base::formatC(DFStationID$STATION_ID, width = 5, format = "d", flag = "0")
   # Replace
   DFStationID$ReplaceStation <- ValidationResultsDF$GetNewWeatherStation
   # Increase ExtractedRunningNo
