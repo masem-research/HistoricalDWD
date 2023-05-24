@@ -7,7 +7,8 @@ Maintainer: Guido Moeser <RPackageDevelopment@masem.de>
 Description: Helps to import and aggregate historical weather data from German federal weather service (DWD)
 Depends: 
     R (>= 4.1),
-    rdwd
+    rdwd,
+    imputeTS
 License: MIT
 Encoding: UTF-8
 LazyData: true

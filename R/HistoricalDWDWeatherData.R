@@ -115,7 +115,8 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   # Wiederholtes Validieren: den Prozess solange wiederholen, bis alle Werte unter Threshold sind
   while (any(ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$GetNewWeatherStation)) {
 
-    browser()
+    #browser()
+    # TODO: Check again the order of the vector - after first run, one of the entries seems not to be stable;
 
     ## Update the vector with station IDs if NA threshold is hit
     UpdatedDFWithStationIDToExtract <-
@@ -176,10 +177,23 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   }
 
   ## TODO: Impute NAs values
+  browser()
+  # Call the function only, if either ImputationRSK or ImputationTMK Flag is set to TRUE
+  if (any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationRSK) ||
+          any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationTMK)) {
+    # Call the time series imputation function:
+    ListWithResults[["HistoricalWeatherDataDFReducedImputed"]] <-
+      ImputeTimeSeries(WXValidationDF = ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues,
+                       TimeSeriesDF = ListWithResults[["HistoricalWeatherDataDFReduced"]])
+    }
 
+  # Final check
+  print("[Message] Number of missing values in time.series RSK:")
+  print(table(is.na(ListWithResults$HistoricalWeatherDataDFReducedImputed$RSK), useNA = "always"))
+  print("[Message] Number of missing values in time.series TMK:")
+  print(table(is.na(ListWithResults$HistoricalWeatherDataDFReducedImputed$TMK), useNA = "always"))
 
-
-  ## TODO: Generate map with all stations using tmap
+  ## TODO: Optional: Generate map with all stations using tmap
 
 
   ## return
