@@ -1,5 +1,7 @@
 #' Main function: Get a data.frame with historical weather data from DWD
 #'
+#' @details Aggregated data.frame is stored in generated list in object `HistoricalWeatherDataAggregated`
+#'
 #' @param DataFrame
 #' @param Proj_key
 #' @param NAME
@@ -176,8 +178,6 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
 
   }
 
-  ## TODO: Impute NAs values
-  browser()
   # Call the function only, if either ImputationRSK or ImputationTMK Flag is set to TRUE
   if (any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationRSK) ||
           any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationTMK)) {
@@ -193,7 +193,11 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   print("[Message] Number of missing values in time.series TMK:")
   print(table(is.na(ListWithResults$HistoricalWeatherDataDFReducedImputed$TMK), useNA = "always"))
 
-  ## TODO: Optional: Generate map with all stations using tmap
+
+  ## Aggregate time series
+  ListWithResults[["HistoricalWeatherDataAggregated"]] <-
+    AggregateByStationIDAndYear(DFToAggregate = ListWithResults[["HistoricalWeatherDataDFReducedImputed"]],
+                                AggregationFunction = "mean")
 
 
   ## return
