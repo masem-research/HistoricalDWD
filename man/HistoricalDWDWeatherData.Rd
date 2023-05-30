@@ -35,11 +35,16 @@ list. Returns a list with the different data.frames
 \description{
 Main function: Get a data.frame with historical weather data from DWD
 }
+\details{
+Aggregated data.frame is stored in generated list in object `HistoricalWeatherDataAggregated`
+}
 \examples{
-PropertyData.1 <- data.frame(Proj_key = c(1021, 1378, 1672),
-                             NAME = c("Helogland (Reede)", "Wyk auf Föhr (Alte Mole)", "Konstanz (Hafen)"),
-                             LATITUDE = c(54.179837, 54.692713, 47.659868),
-                             LONGITUDE = c(7.892211, 8.573618, 9.178899))
+PropertyData.1 <- data.frame(Proj_key = c(1021, 1378, 1672, 1732, 1862),
+                             NAME = c("Helogland (Reede)", "Wyk auf Föhr (Alte Mole)",
+                                      "Konstanz (Hafen)", "Greetsiel (Hafen)",
+                                      "Dornumersiel Hafen"),
+                             LATITUDE = c(54.179837, 54.692713, 47.659868, 53.50214, 53.68001),
+                             LONGITUDE = c(7.892211, 8.573618, 9.178899, 7.09950, 7.48596))
 
 HistDWDDF <- HistoricalDWDWeatherData(DataFrame = PropertyData.1,
                                       Proj_key = Proj_key,

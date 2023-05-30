@@ -18,10 +18,12 @@
 #' @export
 #'
 #' @examples
-#' PropertyData.1 <- data.frame(Proj_key = c(1021, 1378, 1672),
-#'                              NAME = c("Helogland (Reede)", "Wyk auf Föhr (Alte Mole)", "Konstanz (Hafen)"),
-#'                              LATITUDE = c(54.179837, 54.692713, 47.659868),
-#'                              LONGITUDE = c(7.892211, 8.573618, 9.178899))
+#' PropertyData.1 <- data.frame(Proj_key = c(1021, 1378, 1672, 1732, 1862),
+#'                              NAME = c("Helogland (Reede)", "Wyk auf Föhr (Alte Mole)",
+#'                                       "Konstanz (Hafen)", "Greetsiel (Hafen)",
+#'                                       "Dornumersiel Hafen"),
+#'                              LATITUDE = c(54.179837, 54.692713, 47.659868, 53.50214, 53.68001),
+#'                              LONGITUDE = c(7.892211, 8.573618, 9.178899, 7.09950, 7.48596))
 #'
 #' HistDWDDF <- HistoricalDWDWeatherData(DataFrame = PropertyData.1,
 #'                                       Proj_key = Proj_key,
@@ -177,6 +179,14 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
     #browser()
 
   }
+
+  # TODO: Build mapping table: Object-IDs and DWD WS Stations
+  browser()
+  # Assumption: Order of stations not changed: simply match objects from input and match the STATION_ID
+  DataFrame
+  # Final table with stations
+  ListWithResults$WXValidationDF
+  ListWithResults$IDExtractedWeatherStations
 
   # Call the function only, if either ImputationRSK or ImputationTMK Flag is set to TRUE
   if (any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationRSK) ||
