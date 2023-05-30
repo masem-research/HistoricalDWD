@@ -47,14 +47,27 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
                                      ThresholdNAs = 0.05) {
 
 
-  # Empty list for results
+  ## Empty list for results
   ListWithResults <- list()
 
   ## Get Nearby DWD Stations
-  NearbyDWDStationsDataFrame <- NearbyDWDStations(propertyData = PropertyData.1, radius = 50)
+  #  Build a vector with object information from input data.frame
+  df_args <- c(DataFrame, sep = " ")
+  VectorWithObjectInformation <- do.call(paste, df_args)
+  # empty list for nearby DWD stations
+  NearbyDWDStationsList <- list()
+  # Get the DWD stations - one by one
+  for (i in 1:nrow(DataFrame)) {
+    # print message
+    print(paste("[Message] Requesting object:", VectorWithObjectInformation[i]))
+    # request data and write it into a list
+    NearbyDWDStationsList[[i]] <- NearbyDWDStations(propertyData = DataFrame[i,], radius = 50)
+    # Set names
+    names(NearbyDWDStationsList)[[i]] <- DataFrame[i, "Proj_key"]
+  }
 
   # Write into list
-  ListWithResults[["NearbyDWDStationsDataFrame"]] <- NearbyDWDStationsDataFrame
+  ListWithResults[["NearbyDWDStationsList"]] <- NearbyDWDStationsList
 
 
   ## Get DWD Metadata
@@ -65,123 +78,100 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   ListWithResults[["DWDHistoricalMetaDataAllStations"]] <- DWDHistoricalMetaDataAllStations
 
 
-  ## Extract IDs of the closest identified DWD wweather stations
-  IDExtractedWeatherStations <-
-    IDExtractionDWDWeatherStations(NearbyDWDStationsDataFrame = ListWithResults$NearbyDWDStationsDataFrame,
-                                   ExtractedRunningNo = ExtractedRunningNo)
-
-
-
-  # Write into list
-  ListWithResults[["IDExtractedWeatherStations"]] <- IDExtractedWeatherStations
-
-  # TODO: Ggf so ändern, dass die Wetterstationen einzeln abgefragt werden
-  #  Dann können die Stationen besser ausgetauscht werden
-  ## Get the historical data from the identified weather stations
-  HistoricalWeatherDataDF <- GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
-                                                           ListWithResults$IDExtractedWeatherStations)
-
-  # Correct Station-IDs: rdwd package function returns station id as integer without leading nulls!
-  HistoricalWeatherDataDF$STATIONS_ID <-
-    base::formatC(HistoricalWeatherDataDF$STATIONS_ID, width = 5, format = "d", flag = "0")
-
-  # Write into list
-  ListWithResults[["HistoricalWeatherDataDF"]] <- HistoricalWeatherDataDF
-
-
-  ## Reduced historical data from identified weather stations - between start and end date
-  #   and the core variables
-  ListWithResults[["HistoricalWeatherDataDFReduced"]] <-
-    HistoricalWeatherDataDF[as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) >= StartYear &
-                              as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) <= EndYear ,
-                            c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")]
-
-  ## DWD historical data.frame complete or not?
-  ## Generate a complete time.series between start- and end-year
-  #   Missing Entries will be replaced by NA
-  WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
-                                                   ListWithResults$HistoricalWeatherDataDFReduced,
-                                                 StartYear = StartYear,
-                                                 EndYear = EndYear,
-                                                 IDExtractedWeatherStations = ExtractedRunningNo,
-                                                 silent = !PrintMessages,
-                                                 OrderIDsWXStations = ListWithResults$IDExtractedWeatherStations)
-  # Write list into list
-  ListWithResults[["WXValidationDF"]] <- WXValidationDF
-
-  # print current state: time series okay?
-  print("\n")
-  print(ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues)
-
-  # Init
-  ExtractedRunningNo <- ExtractedRunningNo
-
-  # Wiederholtes Validieren: den Prozess solange wiederholen, bis alle Werte unter Threshold sind
-  while (any(ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues$GetNewWeatherStation)) {
-
-    #browser()
-    # TODO: Check again the order of the vector - after first run, one of the entries seems not to be stable;
-
-    ## Update the vector with station IDs if NA threshold is hit
-    UpdatedDFWithStationIDToExtract <-
-      RefreshStationIDs(ValidationResultsDF = ListWithResults$WXValidationDF$ValidationAggrDFPercentageValues,
-                        NearbyDWDStationsDataFrame = ListWithResults$NearbyDWDStationsDataFrame,
-                        ExtractedRunningNo = ExtractedRunningNo,
-                        IDExtractedWeatherStations = IDExtractedWeatherStations)
-
-    # Updated data.frame
-    print("[Message: Update data.frame: NewVectorToExtract contains the new vector with weather stations")
-    print(UpdatedDFWithStationIDToExtract)
-
-    # Get a new set of time.series
-    ## Get the historical data from the identified weather stations
-    HistoricalWeatherDataDF <- GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
-                                                             UpdatedDFWithStationIDToExtract$NewVectorToExtract)
-
-    # Correct Station-IDs: rdwd package function returns station id as integer without leading nulls!
-    HistoricalWeatherDataDF$STATIONS_ID <-
-      base::formatC(HistoricalWeatherDataDF$STATIONS_ID, width = 5, format = "d", flag = "0")
-
-    # Write into list: Update
-    ListWithResults[["HistoricalWeatherDataDF"]] <- HistoricalWeatherDataDF
-
-
-    ## Reduced historical data from identified weather stations - between start and end date
-    #   and the core variables
-    ListWithResults[["HistoricalWeatherDataDFReduced"]] <-
-      HistoricalWeatherDataDF[as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) >= StartYear &
-                                as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) <= EndYear ,
-                              c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")]
-
-    # Validation and Update of evaluation criteria for while-loop
-    # TODO: Fehler --> hier wird die laufende Nummer an der falschen Stelle angepasst,  obwohl
-    #  zuerst die richtige Zeile identifiziert wird!
-    WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
-                                                     ListWithResults$HistoricalWeatherDataDFReduced,
-                                                   StartYear = StartYear,
-                                                   EndYear = EndYear,
-                                                   silent = !PrintMessages,
-                                                   IDExtractedWeatherStations = UpdatedDFWithStationIDToExtract$ExtractedRunningNo,
-                                                   OrderIDsWXStations = ListWithResults$IDExtractedWeatherStations)
-
-    # Inform
-    print("[Message] time.series after updating the Station-ID vector:")
-    print(WXValidationDF$ValidationAggrDFPercentageValues)
-
-    # Write list into list
-    ListWithResults[["WXValidationDF"]] <- WXValidationDF
-
-
-
-    # Update: Extracted Running Number
-    ExtractedRunningNo <- UpdatedDFWithStationIDToExtract$ExtractedRunningNo
-
-    #browser()
-
+  # One by one: get the ids of all DWD WX stations of the first object
+  IdentifiedDWDStationIDs <- list()
+  for (i in 1:nrow(DataFrame)) {
+    # Extract all IDs in a new list
+    IdentifiedDWDStationIDs[[i]] <- ListWithResults$NearbyDWDStationsList[[i]][-1,"Stations_id"] # 1st entry will be dropped
+    # Add object id
+    # Set names
+    names(IdentifiedDWDStationIDs)[[i]] <- paste0("Proj_key_", DataFrame[i, "Proj_key"])
   }
+
+  ListWithResults[["ObjectSpecificDWDStationIDsList"]] <- IdentifiedDWDStationIDs
+
+
+  ## Loop over different objects
+  #   Empty lists
+  HistoricalWeatherDataList <- list() # time series
+  WXValidationList <- list() # meta-data
+  #   while()-loop
+  for (j in 1:length(ListWithResults[["ObjectSpecificDWDStationIDsList"]])) {
+    ## messages
+    print("Request WX data for object:")
+    print(names(ListWithResults[["ObjectSpecificDWDStationIDsList"]][j]))
+    print(VectorWithObjectInformation[j])
+
+    ## Loop over the WX station until the NA-threshold value is reached for TMK and RSK
+    # Startvalue
+    GetNewWeatherStation <- TRUE   # Start value while loop
+    StationNoInList <- 1           # Start value weather station in list
+    while (GetNewWeatherStation) {
+      print(paste("Get new WX station?:", GetNewWeatherStation))
+
+      # Set Station No in List
+      print(paste("Station No in List:", StationNoInList))
+
+      #   1st object
+      #  Get the historical weather data for first DWD station ID
+      HistoricalWeatherDataDF <-
+        GetHistoricalDWDWeatherData(VectorWithIDsDWDWeatherStations =
+                                      ListWithResults[["ObjectSpecificDWDStationIDsList"]][[j]][StationNoInList])
+      # Correct Station-IDs: rdwd package function returns station id as integer without leading nulls!
+      HistoricalWeatherDataDF$STATIONS_ID <-
+        base::formatC(HistoricalWeatherDataDF$STATIONS_ID, width = 5, format = "d", flag = "0")
+
+      ## Reduced historical data from identified weather stations - between start and end date
+      #   and the core variables
+      HistoricalWeatherDataDF <-
+        HistoricalWeatherDataDF[as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) >= StartYear &
+                                  as.numeric(format(HistoricalWeatherDataDF$MESS_DATUM, "%Y")) <= EndYear ,
+                                c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")]
+
+      # Check the data if complete or not - if NA > Threshold, pick the next ID, else: impute NAs and
+      #  write back into the list
+      WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
+                                                       HistoricalWeatherDataDF,
+                                                     StartYear = StartYear,
+                                                     EndYear = EndYear,
+                                                     IDExtractedWeatherStations = ExtractedRunningNo,
+                                                     silent = !PrintMessages,
+                                                     OrderIDsWXStations =  ListWithResults[["ObjectSpecificDWDStationIDsList"]][[1]][1])
+
+      # increase station number in list by 1
+      if (WXValidationDF$ValidationAggrDFPercentageValues$GetNewWeatherStation) {
+        StationNoInList <- StationNoInList + 1
+        # set GetNewWeatherStation to TRUE
+      }
+
+      # Change the counter
+      GetNewWeatherStation <- WXValidationDF$ValidationAggrDFPercentageValues$GetNewWeatherStation
+
+    } # end of while() loop: WX station below threshold
+
+    ## identified data.frame into list
+    WXValidationList[[j]] <- WXValidationDF
+    names(WXValidationList)[[j]] <- WXValidationDF$ValidationAggrDFPercentageValues$STATION_ID
+    HistoricalWeatherDataList[[j]] <- HistoricalWeatherDataDF
+    names(HistoricalWeatherDataList)[[j]] <- WXValidationDF$ValidationAggrDFPercentageValues$STATION_ID
+
+  } # end of for() loop: WX stations for all objects
+
+  ListWithResults[["WXValidationList"]] <- WXValidationList
+  ListWithResults[["HistoricalWeatherDataList"]] <- HistoricalWeatherDataList
+
+
+  ## Function stop
+  return(ListWithResults)
 
   # TODO: Build mapping table: Object-IDs and DWD WS Stations
   browser()
+
+  # TODO: Imputation
+
+  # TODO: Aggregation
+
+
   # Assumption: Order of stations not changed: simply match objects from input and match the STATION_ID
   DataFrame
   # Final table with stations
