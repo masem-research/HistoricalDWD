@@ -15,7 +15,7 @@ AggregateByStationIDAndYear <- function(DFToAggregate,
   # Step 2: Aggregate by STATIONS_ID and DayMonth
   DFAggregated <- aggregate.data.frame(x = DFToAggregate[,c("RSK", "TMK")],
                                        by = list(DFToAggregate$STATIONS_ID, DFToAggregate$DayMonth),
-                                       FUN = AggregationFunction)
+                                       FUN = AggregationFunction, na.rm = TRUE)
   # Step 3: set colnames
   colnames(DFAggregated) <- c("STATIONS_ID", "DayMonth", "RSKmean", "TMKmean")
   # Step Validate: Number of cases of each STATIONS_ID

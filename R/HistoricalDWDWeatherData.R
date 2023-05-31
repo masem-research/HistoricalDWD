@@ -157,50 +157,62 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
 
   } # end of for() loop: WX stations for all objects
 
+  # Write results into list
   ListWithResults[["WXValidationList"]] <- WXValidationList
   ListWithResults[["HistoricalWeatherDataList"]] <- HistoricalWeatherDataList
 
+  ## Aggregate by STATIONS_ID and MESS_DATUM
+  #   Check for dupes
+  print("[Message] Prüfung auf Dubletten:")
+  print(lapply(X = ListWithResults$HistoricalWeatherDataList, FUN = function(x) {table(duplicated(x = x[c("STATIONS_ID", "MESS_DATUM")]))}))
+
+  ListWithResults$HistoricalWeatherDataImputedList <-
+    lapply(X = ListWithResults$HistoricalWeatherDataList, FUN = function(x) {
+      aggregate.data.frame(x = x[,c("RSK", "TMK")], by = list(x$STATIONS_ID, x$MESS_DATUM), FUN = mean, na.rm = TRUE)})
+  # Correct names in data.frames
+  ColNames <- c("STATIONS_ID", "MESS_DATUM", "RSK", "TMK")
+  ListWithResults$HistoricalWeatherDataImputedList <- lapply(ListWithResults$HistoricalWeatherDataImputedList, setNames, ColNames)
+
+
+
+  ## TODO: Validate and check for missing dates
+
+
+  ## Aggregate time series: NAs will be excluded; Aggreation function: mean
+  #   Check for duplicates?
+  print("[Message] Prüfung auf Dubletten:")
+  print(lapply(X = ListWithResults$HistoricalWeatherDataImputedList, FUN = function(x) {table(duplicated(x = x[c("STATIONS_ID", "MESS_DATUM")]))}))
+
+  # Number of cases in each data.frame
+  lapply(ListWithResults$HistoricalWeatherDataImputedList, nrow)
+  # ...
+
+
+  ## TODO: Impute missing values
+  # # Call the function only, if either ImputationRSK or ImputationTMK Flag is set to TRUE
+  # if (any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationRSK) ||
+  #     any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationTMK)) {
+  #   # Call the time series imputation function:
+  #   ListWithResults[["HistoricalWeatherDataDFReducedImputed"]] <-
+  #     ImputeTimeSeries(WXValidationDF = ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues,
+  #                      TimeSeriesDF = ListWithResults[["HistoricalWeatherDataDFReduced"]])
+  # }
+
+
+  ## Aggregate by day and month
+  ListWithResults[["HistoricalWeatherDataImputedAggregated"]] <-
+    lapply(X = ListWithResults[["HistoricalWeatherDataImputedList"]],
+           FUN = function(x) {AggregateByStationIDAndYear(DFToAggregate = x,
+                                                          AggregationFunction = "mean")})
+
+
+  ## Final check
+  print("[Message] Number of missing values in time.series RSK:")
+  print(table(is.na(ListWithResults$HistoricalWeatherDataImputedAggregated$RSK), useNA = "always"))
+  print("[Message] Number of missing values in time.series TMK:")
+  print(table(is.na(ListWithResults$HistoricalWeatherDataImputedAggregated$TMK), useNA = "always"))
 
   ## Function stop
-  return(ListWithResults)
-
-  # TODO: Build mapping table: Object-IDs and DWD WS Stations
-  browser()
-
-  # TODO: Imputation
-
-  # TODO: Aggregation
-
-
-  # Assumption: Order of stations not changed: simply match objects from input and match the STATION_ID
-  DataFrame
-  # Final table with stations
-  ListWithResults$WXValidationDF
-  ListWithResults$IDExtractedWeatherStations
-
-  # Call the function only, if either ImputationRSK or ImputationTMK Flag is set to TRUE
-  if (any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationRSK) ||
-          any(ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues$ImputationTMK)) {
-    # Call the time series imputation function:
-    ListWithResults[["HistoricalWeatherDataDFReducedImputed"]] <-
-      ImputeTimeSeries(WXValidationDF = ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues,
-                       TimeSeriesDF = ListWithResults[["HistoricalWeatherDataDFReduced"]])
-    }
-
-  # Final check
-  print("[Message] Number of missing values in time.series RSK:")
-  print(table(is.na(ListWithResults$HistoricalWeatherDataDFReducedImputed$RSK), useNA = "always"))
-  print("[Message] Number of missing values in time.series TMK:")
-  print(table(is.na(ListWithResults$HistoricalWeatherDataDFReducedImputed$TMK), useNA = "always"))
-
-
-  ## Aggregate time series
-  ListWithResults[["HistoricalWeatherDataAggregated"]] <-
-    AggregateByStationIDAndYear(DFToAggregate = ListWithResults[["HistoricalWeatherDataDFReducedImputed"]],
-                                AggregationFunction = "mean")
-
-
-  ## return
   return(ListWithResults)
 
 
