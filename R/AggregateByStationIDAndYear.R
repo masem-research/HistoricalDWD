@@ -11,7 +11,7 @@
 AggregateByStationIDAndYear <- function(DFToAggregate,
                                         AggregationFunction = "mean") {
   # Step 1: Extract Date without Year
-  DFToAggregate$DayMonth <- format(x = DFToAggregate$MESS_DATUM, format = "%d-%m")
+  DFToAggregate$DayMonth <- format(x = DFToAggregate$Day, format = "%d-%m")
   # Step 2: Aggregate by STATIONS_ID and DayMonth
   DFAggregated <- aggregate.data.frame(x = DFToAggregate[,c("RSK", "TMK")],
                                        by = list(DFToAggregate$STATIONS_ID, DFToAggregate$DayMonth),

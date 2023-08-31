@@ -42,7 +42,7 @@ GenerateCompleteTimeSeriesDataFrame <- function(StartYear = StartYear, EndYear =
   print("Check for complete data.sets, should be number of years times approx. 365 days/year (on average 365.25 days):")
   print(tapply(X = HistoricalWeatherDataComplete$Day, INDEX = HistoricalWeatherDataComplete$STATIONS_ID, FUN = length))
   # sort the data.frame
-  # HistoricalWeatherDataComplete[order(c(HistoricalWeatherDataComplete$STATIONS_ID, HistoricalWeatherDataComplete$Day)),]
+  HistoricalWeatherDataComplete[order(c(HistoricalWeatherDataComplete$STATIONS_ID, HistoricalWeatherDataComplete$Day)),]
   # Convert into list
   HistoricalWeatherDataCompleteList <- split(x = HistoricalWeatherDataComplete, f = HistoricalWeatherDataComplete$STATIONS_ID)
 
