@@ -161,11 +161,52 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   ListWithResults[["WXValidationList"]] <- WXValidationList
   ListWithResults[["HistoricalWeatherDataList"]] <- HistoricalWeatherDataList
 
-  ## Aggregate by STATIONS_ID and MESS_DATUM
-  #   Check for dupes
-  print("[Message] Prüfung auf Dubletten:")
-  print(lapply(X = ListWithResults$HistoricalWeatherDataList, FUN = function(x) {table(duplicated(x = x[c("STATIONS_ID", "MESS_DATUM")]))}))
+  browser()
 
+  ## Aggregate by STATIONS_ID and MESS_DATUM
+  ListWithResults$HistoricalWeatherDataCompleteList <-
+    GenerateCompleteTimeSeriesDataFrame(StartYear = StartYear, EndYear = EndYear,
+                                        HistDataList = ListWithResults$HistoricalWeatherDataList)
+
+  # # Check the data
+  # print("[Message] Prüfung auf Dubletten:")
+  # print(lapply(X = ListWithResults$HistoricalWeatherDataList, FUN = function(x) {table(duplicated(x = x[c("STATIONS_ID", "MESS_DATUM")]))}))
+  # # Aggregate
+  # ListWithResults$HistoricalWeatherDataList <- lapply(X = ListWithResults$HistoricalWeatherDataList, FUN = function(x) {
+  #   aggregate.data.frame(x = x[,c("RSK", "TMK")], by = list(x$STATIONS_ID, x$MESS_DATUM), FUN = mean, na.rm = TRUE)})
+  # # Check number of entries
+  # print("Number of rows in each time.series.data.frame:")
+  # print(sapply(X = ListWithResults$HistoricalWeatherDataList, FUN = nrow))
+  #
+  # # Create complete time.series.data.frame by StationID
+  # EmptyTimeSeriesDF <- CreateEmptyTimeSeriesDF(StartYear = StartYear, EndYear = EndYear, StationIDs = names(ListWithResults$HistoricalWeatherDataList))
+  # # Convert list into data.frame
+  # HistoricalWeatherDataDf <- do.call(rbind, ListWithResults$HistoricalWeatherDataList)
+  # # delete row.names
+  # row.names(HistoricalWeatherDataDf) <- NULL
+  # # set first two names in data.frame
+  # names(HistoricalWeatherDataDf)[c(1,2)] <-  c("STATIONS_ID", "Day")
+  # # Set date-variable to Date
+  # HistoricalWeatherDataDf$Day <- as.Date(HistoricalWeatherDataDf$Day)
+  #
+  # # Merge DWD time series data.frames against the time series data.frame
+  # HistoricalWeatherDataComplete <- merge.data.frame(x = EmptyTimeSeriesDF, y = HistoricalWeatherDataDf, by = c("STATIONS_ID", "Day"), all.x = TRUE)
+  # print("Check for complete data.sets, should be number of years times approx. 365 days/year (on average 365.25 days):")
+  # print(tapply(X = HistoricalWeatherDataComplete$Day, INDEX = HistoricalWeatherDataComplete$STATIONS_ID, FUN = length))
+  # # sort the data.frame
+  # # HistoricalWeatherDataComplete[order(c(HistoricalWeatherDataComplete$STATIONS_ID, HistoricalWeatherDataComplete$Day)),]
+  # # Convert into list
+  # HistoricalWeatherDataCompleteList <- split(x = HistoricalWeatherDataComplete, f = HistoricalWeatherDataComplete$STATIONS_ID)
+  #
+  # # Check for missing values
+  # print(sapply(X = HistoricalWeatherDataCompleteList, FUN = function(df) {
+  #   c(NA.TMK = sum(is.na(df$TMK)), NA.RSK = sum(is.na(df$RSK)))}))
+
+
+  browser()
+
+  # STOP HERE
+  ## Imputation
   ListWithResults$HistoricalWeatherDataImputedList <-
     lapply(X = ListWithResults$HistoricalWeatherDataList, FUN = function(x) {
       aggregate.data.frame(x = x[,c("RSK", "TMK")], by = list(x$STATIONS_ID, x$MESS_DATUM), FUN = mean, na.rm = TRUE)})
@@ -197,6 +238,9 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   #     ImputeTimeSeries(WXValidationDF = ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues,
   #                      TimeSeriesDF = ListWithResults[["HistoricalWeatherDataDFReduced"]])
   # }
+  #browser()
+
+
 
 
   ## Aggregate by day and month
