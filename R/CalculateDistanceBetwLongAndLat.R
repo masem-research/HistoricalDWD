@@ -101,10 +101,12 @@ CalculateDistanceBetwLongAndLat <- function(
                         "LatInRadiansObject", "LongInRadiansObject",
                         "cosinusangle", "angle", "samepoint")] <- NULL
     # Clean-up entries due to radius
-    CleanUpDueToRadius <- FALSE
+    CleanUpDueToRadius <- TRUE
     if (CleanUpDueToRadius) {
       StationObjectDF <- StationObjectDF[StationObjectDF$DistanceKM < RadiusAroundObject,]
     }
+    # Sort by distance
+    StationObjectDF <- StationObjectDF[order(StationObjectDF$DistanceKM),]
     # Write into list
     DistanceObjectStationsList[[i]] <- StationObjectDF
   }

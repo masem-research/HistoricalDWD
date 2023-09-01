@@ -51,6 +51,14 @@ StationData <- data.frame(StationName = c("WARNEMUENDE", "JEVER", "LEUCHTTURM KI
                           LAT =  c(54.11, 53.32, 54.30, NA, 53.43),
                           LONG = c(12.05,  7.53, 10.16, NA,  7.09))
 
+CalculateDistanceBetwLongAndLat(ObjectDF = PropertyData,
+                                ObjectLatName = "LATITUDE",
+                                ObjectLongName = "LONGITUDE",
+                                StationDF = StationData,
+                                StationLatName = "LAT",
+                                StationLongName = "LONG",
+                                RadiusAroundObject = 100,
+                                RadiusOfEarth = 6371)
 }
 \author{
 Berry Boessenkool, \email{berry-b@gmx.de}, Aug 2016 + Jan 2017.
