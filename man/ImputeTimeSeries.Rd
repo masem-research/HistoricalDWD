@@ -2,7 +2,7 @@
 % Please edit documentation in R/ImputeTimeSeries.R
 \name{ImputeTimeSeries}
 \alias{ImputeTimeSeries}
-\title{Impute time series with NA values to get complete data}
+\title{[Deprecated] Impute time series with NA values to get complete data}
 \usage{
 ImputeTimeSeries(
   WXValidationDF = ListWithResults[["WXValidationDF"]]$ValidationAggrDFPercentageValues,
@@ -16,5 +16,5 @@ ImputeTimeSeries(
 data.frame. complete time.series data.frame.
 }
 \description{
-Impute time series with NA values to get complete data
+[Deprecated] Impute time series with NA values to get complete data
 }

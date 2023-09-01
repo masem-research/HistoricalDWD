@@ -1,4 +1,4 @@
-#' Impute time series with NA values to get complete data
+#' [Deprecated] Impute time series with NA values to get complete data
 #'
 #' @param WXValidationDF
 #' @param TimeSeriesDF
