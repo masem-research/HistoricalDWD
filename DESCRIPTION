@@ -8,6 +8,7 @@ Description: Helps to import and aggregate historical weather data from German f
 Depends: 
     R (>= 4.1),
     rdwd,
+    mosmix,
     imputeTS
 License: MIT
 Encoding: UTF-8

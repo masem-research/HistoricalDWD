@@ -68,11 +68,59 @@ ForecastDWDWeatherData <- function(UseBuildInDWDForecastingMetaData = FALSE,
                                                                        ColumnForecastingURL = "ForecastingURL")
   } # end for-loop
 
+  ## Unpack DWD Forecasting File - kmz-Format - and return as XML document
+  #   store into a list
+  DWDForecastingXMLFiles <- list()
+  for (i in 1:nrow(DistancesObjectWXStations)) {
+    DWDForecastingXMLFiles[[i]] <- UnpackDWDForecastFile(PathToFolderAndFile = DistancesObjectWXStations$PathAndFileName[i])
+  }
+  # set names to ID
+  names(DWDForecastingXMLFiles) <- DistancesObjectWXStations$ID
 
 
+  ## Unpack DWD forecasting station metadata
+  DWDForecastingMetaDataFromKMLObject <- list()
+  for (i in 1:nrow(DistancesObjectWXStations)) {
+    DWDForecastingMetaDataFromKMLObject[[i]] <- ExtractDWDForecastStationDataFromKML(ExtractedDWDKMLFile = DWDForecastingXMLFiles[[i]])
+  }
+  # build data.frame
+  DWDForecastingMetaDataFromKMLObject <- as.data.frame(do.call(rbind, DWDForecastingMetaDataFromKMLObject))
+  #str(DWDForecastingMetaDataFromKMLObject)
+  ## Validate station list
+  if (any(!DWDForecastingMetaDataFromKMLObject$name == DistancesObjectWXStations$ID)) {
+    message("Some of the requested stations are not available. Please check the data.")
+  }
 
-  #View(DistancesObjectWXStations)
-  # TODO: Implement selection process: which station delivers complete forecasting data?
-  return(DistancesObjectWXStations)
+  ## Extract data from kml file
+  DWDForecastingDatList <- list()
+  for (i in 1:length(DWDForecastingXMLFiles)) {
+    DWDForecastingDatList[[i]] <- ExtractDataFromForecastingKml(ExtractedDWDKMLFile = DWDForecastingXMLFiles[[i]])
+  }
+
+  # Build function: CheckIfForecastingDataIsAvailable()
+  DistancesObjectWXStations <- CheckIfForecastingDataIsAvailable(DWDForecastingDatList = DWDForecastingDatList,
+                                                                 DWDForecastingMetaDataFromKMLObject = DWDForecastingMetaDataFromKMLObject,
+                                                                 DistancesObjectWXStations = DistancesObjectWXStations)
+
+  ## Add a flag if certain parameters are available
+  #   TTT
+  #   RR1c
+  # Number of entries must be 247 for the whole 10 days
+  DistancesObjectWXStations$TTT_RR1c_complete <- FALSE
+  DistancesObjectWXStations$TTT_RR1c_complete[DistancesObjectWXStations$TTT == 247 & DistancesObjectWXStations$RR1c == 247] <- TRUE
+
+  ## Generate the final list with selected stations
+  #   Sort dataset by Proj_Key and distance
+  DistancesObjectWXStations <- DistancesObjectWXStations[order(DistancesObjectWXStations$Proj_key, DistancesObjectWXStations$DistanceKM),]
+  #   Select only TTT_RR1c_complete == TRUE entries
+  DistancesObjectWXStationsWithWXParameter <- DistancesObjectWXStations[DistancesObjectWXStations$TTT_RR1c_complete == TRUE,]
+  #   Add a group specific id by Proj_key and DistanceKM
+  DistancesObjectWXStationsWithWXParameter$GroupID <- ave(DistancesObjectWXStationsWithWXParameter$DistanceKM,
+                                                          DistancesObjectWXStationsWithWXParameter$Proj_key, FUN = seq_along)
+  # Select the relvant entry: 1
+  DistancesObjectWXStationsWithWXParameterFinalList <- DistancesObjectWXStationsWithWXParameter[DistancesObjectWXStationsWithWXParameter$GroupID == 1,]
+
+  # return the final list
+  return(DistancesObjectWXStationsWithWXParameterFinalList)
 
 }

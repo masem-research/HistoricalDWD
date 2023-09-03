@@ -13,7 +13,7 @@
 #' # Request the DWD forecasting weather data
 #' PathToFolderAndFile <- RequestMOSMIXLData(RequestURLDataFrame = TestRequestDF, ColumnWeatherID = "ID", ColumnForecastingURL = "URL")
 #' # Extract XML
-#' ExtrahierteForecastXML <- DWDForecastDateiEntpacken(PathToFolderAndFile = PathToFolderAndFile)
+#' ExtrahierteForecastXML <- UnpackDWDForecastFile(PathToFolderAndFile = PathToFolderAndFile)
 #' class(ExtrahierteForecastXML)
 UnpackDWDForecastFile <- function(PathToFolderAndFile) {
   ## Unzip kml file in folder
