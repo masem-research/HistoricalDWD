@@ -94,7 +94,8 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   ## Loop over different objects
   #   Empty lists
   HistoricalWeatherDataList <- list() # time series
-  WXValidationList <- list() # meta-data
+  WXValidationList <- list()          # meta-data
+  IdentifiedWeatherStations <- list() # identified weather stations
   #   while()-loop
   for (j in 1:length(ListWithResults[["ObjectSpecificDWDStationIDsList"]])) {
     ## messages
@@ -120,6 +121,7 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
       # Correct Station-IDs: rdwd package function returns station id as integer without leading nulls!
       HistoricalWeatherDataDF$STATIONS_ID <-
         base::formatC(HistoricalWeatherDataDF$STATIONS_ID, width = 5, format = "d", flag = "0")
+
 
       ## Reduced historical data from identified weather stations - between start and end date
       #   and the core variables
@@ -149,17 +151,31 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
 
     } # end of while() loop: WX station below threshold
 
+    #browser()
+
     ## identified data.frame into list
     WXValidationList[[j]] <- WXValidationDF
     names(WXValidationList)[[j]] <- WXValidationDF$ValidationAggrDFPercentageValues$STATION_ID
     HistoricalWeatherDataList[[j]] <- HistoricalWeatherDataDF
     names(HistoricalWeatherDataList)[[j]] <- WXValidationDF$ValidationAggrDFPercentageValues$STATION_ID
+    IdentifiedWeatherStations[[j]] <- WXValidationDF$ValidationAggrDFPercentageValues
+    names(IdentifiedWeatherStations)[[j]] <- WXValidationDF$ValidationAggrDFPercentageValues$STATION_ID
 
   } # end of for() loop: WX stations for all objects
 
-  # Write results into list
+
+  ## Write results into list
   ListWithResults[["WXValidationList"]] <- WXValidationList
   ListWithResults[["HistoricalWeatherDataList"]] <- HistoricalWeatherDataList
+  ListWithResults[["IdentifiedWeatherStations"]] <- IdentifiedWeatherStations
+
+
+  ## Add project keys to IdentifiedWeatherStations
+  ListWithResults$IdentifiedWeatherStationsDF <- do.call(rbind, IdentifiedWeatherStations)
+  # Add project keys to final list
+  ListWithResults$IdentifiedWeatherStationsDF$Proj_key <- PropertyData.1$Proj_key
+  ListWithResults$IdentifiedWeatherStationsDF$Proj_Name <- PropertyData.1$NAME
+
 
   ## Aggregate by STATIONS_ID and MESS_DATUM
   ListWithResults$HistoricalWeatherDataCompleteList <-
@@ -188,6 +204,14 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   print(sapply(X = ListWithResults$HistoricalWeatherDataImputedAggregated, FUN = function(x) {sum(is.na(x$RSKmean))}))
   print("[Message] Number of missing values in time.series TMK:")
   print(sapply(X = ListWithResults$HistoricalWeatherDataImputedAggregated, FUN = function(x) {sum(is.na(x$TMKmean))}))
+
+  ## Final Mapping List
+  cat("--------------------------------------------------------------------------------------------------------------------------------------")
+  cat("\n\nFinal list with identified weather stations corresponding to given Project-Keys:\n")
+  print(ListWithResults$IdentifiedWeatherStationsDF)
+  cat("\n\n")
+  cat("--------------------------------------------------------------------------------------------------------------------------------------")
+
 
   ## Function stop
   return(ListWithResults)
