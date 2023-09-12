@@ -173,8 +173,8 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   ## Add project keys to IdentifiedWeatherStations
   ListWithResults$IdentifiedWeatherStationsDF <- do.call(rbind, IdentifiedWeatherStations)
   # Add project keys to final list
-  ListWithResults$IdentifiedWeatherStationsDF$Proj_key <- PropertyData.1$Proj_key
-  ListWithResults$IdentifiedWeatherStationsDF$Proj_Name <- PropertyData.1$NAME
+  ListWithResults$IdentifiedWeatherStationsDF$Proj_key <- DataFrame$Proj_key
+  ListWithResults$IdentifiedWeatherStationsDF$Proj_Name <- DataFrame$NAME
 
 
   ## Aggregate by STATIONS_ID and MESS_DATUM
