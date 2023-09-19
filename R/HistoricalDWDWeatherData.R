@@ -61,7 +61,10 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
     # print message
     print(paste("[Message] Requesting object:", VectorWithObjectInformation[i]))
     # request data and write it into a list
-    NearbyDWDStationsList[[i]] <- NearbyDWDStations(propertyData = DataFrame[i,], radius = 50)
+    NearbyDWDStationsList[[i]] <- NearbyDWDStations(propertyData = DataFrame[i,],
+                                                    radius = 50,
+                                                    latitude = LATITUDE,
+                                                    longitude = LONGITUDE)
     # Set names
     names(NearbyDWDStationsList)[[i]] <- DataFrame[i, "Proj_key"]
   }
