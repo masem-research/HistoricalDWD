@@ -133,7 +133,7 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
       # Check the data if complete or not - if NA > Threshold, pick the next ID, else: impute NAs and
       #  write back into the list
       WXValidationDF <- CheckIfWeatherDataIsComplete(HistoricalWeatherDataFrameToTest =
-                                                       HistoricalWeatherDataDF,
+                                                     HistoricalWeatherDataDF,
                                                      StartYear = StartYear,
                                                      EndYear = EndYear,
                                                      IDExtractedWeatherStations = ExtractedRunningNo,
@@ -173,8 +173,13 @@ HistoricalDWDWeatherData <- function(DataFrame = PropertyData.1,
   ## Add project keys to IdentifiedWeatherStations
   ListWithResults$IdentifiedWeatherStationsDF <- do.call(rbind, IdentifiedWeatherStations)
   # Add project keys to final list
+<<<<<<< HEAD
   ListWithResults$IdentifiedWeatherStationsDF$Proj_key <- DataFrame$Proj_key
   ListWithResults$IdentifiedWeatherStationsDF$Proj_Name <- DataFrame$NAME
+=======
+  ListWithResults$IdentifiedWeatherStationsDF$Proj_key <- DataFrame["Proj_key"]
+  ListWithResults$IdentifiedWeatherStationsDF$Proj_Name <- DataFrame["NAME"]
+>>>>>>> Develop
 
 
   ## Aggregate by STATIONS_ID and MESS_DATUM
