@@ -1,7 +1,7 @@
 Package: HistoricalDWD
 Type: Package
 Title: Gets and aggregates historical weather data from German federal weather service (DWD)
-Version: 0.1.0
+Version: 0.1.1
 Author: Guido Moeser
 Maintainer: Guido Moeser <RPackageDevelopment@masem.de>
 Description: Helps to import and aggregate historical weather data from German federal weather service (DWD)
