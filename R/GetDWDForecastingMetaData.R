@@ -11,7 +11,7 @@ GetDWDForecastingMetaData <- function() {
   ## Pull table with metadata from DWD opendata server
   # Link: https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg;jsessionid=C902F00ACCB423075BF87DB22E384568.live11042?view=nasPublication&nn=16102
   LinkToDWDForecastingMetaData <-
-    "https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg;jsessionid=C902F00ACCB423075BF87DB22E384568.live11042?view=nasPublication&nn=16102"
+    "https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg;jsessionid=A2BFE2CF3D67A55375E43988E6E71980.live21072?view=nasPublication&nn=16102"
   ## Download txt-file
   # Please note: File is in fixed format
   #  header is first set to FALSE and then added manually due to import problems
